@@ -38,7 +38,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         List<CategoryEntity> level1 = categoryEntities.stream().filter(categoryEntity -> {
             return categoryEntity.getParentCid() == 0;
         }).map(menu -> {
-            menu.setChlidren(getChildren(menu,categoryEntities));
+            menu.setChildren(getChildren(menu,categoryEntities));
             return menu;
         }).sorted((menu1,menu2)->{
             return (menu1.getSort()==null?0:menu1.getSort()) - (menu2.getSort()==null?0:menu2.getSort());
@@ -50,7 +50,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         List<CategoryEntity> collect = all.stream().filter((category) -> {
             return category.getParentCid() == root.getCatId();
         }).map(categoryEntity->{
-            categoryEntity.setChlidren(getChildren(categoryEntity,all));
+            categoryEntity.setChildren(getChildren(categoryEntity,all));
             return categoryEntity;
         }).sorted((menu1,menu2)->{
             return (menu1.getSort()==null?0:menu1.getSort()) - (menu2.getSort()==null?0:menu2.getSort());

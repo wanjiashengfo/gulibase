@@ -2,12 +2,23 @@ spring:
   datasource:
     username: root
     password: root
-    url: jdbc:mysql://192.168.56.9:3306/gulimall_pms
+    url: jdbc:mysql://192.168.56.10:3306/gulimall_pms
     driver-class-name: com.mysql.jdbc.Driver
+  cloud:
+    alicloud:
+      access-key: LTAI4GCA7fjMN8SJ7SPqypxn
+      secret-key: hWBSez9rSzPS3iN8HdiAMLry16UBdJ
+      oss:
+        endpoint: oss-cn-shanghai.aliyuncs.com
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
 server:
-  port: 10001
+  port: 11000
+logging:
+  level:
+    com.atguigu.gulimall: debug
