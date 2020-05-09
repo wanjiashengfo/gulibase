@@ -39,7 +39,7 @@ public class UndoLogEntity implements Serializable {
 	/**
 	 * 
 	 */
-	private unknowType rollbackInfo;
+	private String rollbackInfo;
 	/**
 	 * 
 	 */
