@@ -33,10 +33,10 @@ public class AttrGroupController {
     /**
      * 列表
      */
-    @RequestMapping("/list")
+    @RequestMapping("/list/{catLogId}")
   //  @RequiresPermissions("product:attrgroup:list")
-    public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = attrGroupService.queryPage(params);
+    public R list(@RequestParam Map<String, Object> params,@PathVariable("catLogId")  long catLogId){
+        PageUtils page = attrGroupService.queryPage(params,catLogId);
 
         return R.ok().put("page", page);
     }
