@@ -8,6 +8,7 @@ import com.atguigu.gulimall.product.entity.AttrEntity;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
+import com.atguigu.gulimall.product.vo.AttrGroupWithAttrsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -105,6 +106,12 @@ public class AttrGroupController {
 		attrGroupService.removeByIds(Arrays.asList(attrGroupIds));
 
         return R.ok();
+    }
+//    /product/attrgroup/{catelogId}/withattr
+    @GetMapping("/{catelogId}/withattr")
+    public R getAttrGroupWithAttrs(@PathVariable("catelogId") Long catelogId){
+       List<AttrGroupWithAttrsVo> list = attrGroupService.getAttrGroupWithAttrsByCatelogId(catelogId);
+       return R.ok().put("data",list);
     }
 
 }
