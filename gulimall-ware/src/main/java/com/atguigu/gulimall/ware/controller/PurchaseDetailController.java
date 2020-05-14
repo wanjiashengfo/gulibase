@@ -30,6 +30,8 @@ public class PurchaseDetailController {
     @Autowired
     private PurchaseDetailService purchaseDetailService;
 
+
+
     /**
      * 列表
      */
