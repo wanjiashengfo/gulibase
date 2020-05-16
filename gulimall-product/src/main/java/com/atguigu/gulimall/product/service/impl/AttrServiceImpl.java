@@ -173,4 +173,10 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         return null;
     }
 
+    @Override
+    public List<Long> selectSearchAttrIds(List<Long> attrIds) {
+        return baseMapper.selectSearchAttrIds(attrIds);
+
+    }
+
 }

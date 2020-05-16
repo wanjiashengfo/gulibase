@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
 @EnableDiscoveryClient
-@MapperScan("com.atguigu.gulimall.ware.dao")
+
 @SpringBootApplication
 public class GulimallWareApplication {
 
