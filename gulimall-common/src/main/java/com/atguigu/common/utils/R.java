@@ -8,6 +8,8 @@
 
 package com.atguigu.common.utils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,11 +23,19 @@ import java.util.Map;
  *
  * @author Mark sunlightcs@gmail.com
  */
-public class R<T> extends HashMap<String, Object> {
+public class R extends HashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
-	@Setter
-	@Getter
-	public	T data;
+
+	public R setData(Object data){
+		put("data",data);
+		return this;
+	}
+	public <T> T getData(TypeReference<T> typeReference){
+		Object data = get("data");
+		String s = JSON.toJSONString(data);
+		T t = JSON.parseObject(s, typeReference);
+		return t;
+	}
 	public R() {
 		put("code", 0);
 		put("msg", "success");

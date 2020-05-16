@@ -28,11 +28,11 @@ public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
     @PostMapping("/hasStock")
-    public R<List<SkuHasStockVo>> getSkusHasStock(@RequestBody List<Long> skuIds){
+    public R getSkusHasStock(@RequestBody List<Long> skuIds){
         List<SkuHasStockVo> vos = wareSkuService.getSkusHasStock(skuIds);
-        R<List<SkuHasStockVo>>  ok = R.ok();
-        ok.setData(vos);
-        return ok;
+        R  ok = R.ok();
+
+        return ok.setData(vos);
     }
     /**
      * 列表
