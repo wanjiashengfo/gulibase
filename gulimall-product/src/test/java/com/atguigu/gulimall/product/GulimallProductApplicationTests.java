@@ -12,12 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.UUID;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -29,6 +32,16 @@ class GulimallProductApplicationTests {
 	OSSClient ossClient;
 	@Autowired
 	CategoryService categoryService;
+	@Autowired
+	StringRedisTemplate stringRedisTemplate;
+	@Test
+	public void testRedis(){
+		ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
+		ops.set("hello","world_"+ UUID.randomUUID().toString());
+		System.out.println("保存的数据是："+ops.get("hello"));
+
+	}
+
     @Test
 	public void testFindPath(){
 		Long[] catelogPath = categoryService.findCatelogPath(225L);

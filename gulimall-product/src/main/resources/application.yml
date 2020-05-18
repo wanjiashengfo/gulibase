@@ -13,7 +13,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
   thymeleaf:
-    cache: false
+    cache: true
+  redis:
+    host: 192.168.56.10
+    port: 6379
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
@@ -26,5 +29,6 @@ server:
 
 logging:
   level:
-    com.atguigu.gulimall: debug
+    com.atguigu.gulimall: error
+
 
