@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,9 +77,9 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     public Map<String, List<Catelog2Vo>> getCatalogJSON() {
         String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
         if(StringUtils.isEmpty(catalogJSON)){
+
             Map<String, List<Catelog2Vo>> catalogJSONFromDB = getCatalogJSONFromDB();
-            String s = JSON.toJSONString(catalogJSONFromDB);
-            stringRedisTemplate.opsForValue().set("catalogJSON",s);
+
             return catalogJSONFromDB;
         }
         Map<String, List<Catelog2Vo>> result = JSON.parseObject(catalogJSON,new TypeReference<Map<String, List<Catelog2Vo>> >(){});
@@ -86,31 +87,43 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     public Map<String, List<Catelog2Vo>> getCatalogJSONFromDB() {
-        List<CategoryEntity> selectList = baseMapper.selectList(null);
+        synchronized (this) {
 
-        List<CategoryEntity> level1Categories = getParent_cid(selectList,0L);
+            String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
+            if(!StringUtils.isEmpty(catalogJSON)){
 
-        Map<String, List<Catelog2Vo>> parent_cid = level1Categories.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
-            List<CategoryEntity> categoryEntities = getParent_cid(selectList,v.getCatId());
-            List<Catelog2Vo> catelog2Vos = null;
-            if (categoryEntities != null) {
-                catelog2Vos = categoryEntities.stream().map(l2 -> {
-                    Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName());
-                    List<CategoryEntity> level3 = getParent_cid(selectList,l2.getCatId());
-                    if(level3!=null){
-                        List<Catelog2Vo.Catelog3Vo> collect = level3.stream().map(l3 -> {
-                            Catelog2Vo.Catelog3Vo catelog3Vo = new Catelog2Vo.Catelog3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName().toString());
-                            return catelog3Vo;
-                        }).collect(Collectors.toList());
-                        catelog2Vo.setCatalog3List(collect);
-                    }
-
-                    return catelog2Vo;
-                }).collect(Collectors.toList());
+                Map<String, List<Catelog2Vo>> result = JSON.parseObject(catalogJSON,new TypeReference<Map<String, List<Catelog2Vo>> >(){});
+                return result;
             }
-            return catelog2Vos;
-        }));
-        return parent_cid;
+            System.out.println("缓存不命中，查询数据库");
+            List<CategoryEntity> selectList = baseMapper.selectList(null);
+
+            List<CategoryEntity> level1Categories = getParent_cid(selectList, 0L);
+
+            Map<String, List<Catelog2Vo>> parent_cid = level1Categories.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
+                List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
+                List<Catelog2Vo> catelog2Vos = null;
+                if (categoryEntities != null) {
+                    catelog2Vos = categoryEntities.stream().map(l2 -> {
+                        Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName());
+                        List<CategoryEntity> level3 = getParent_cid(selectList, l2.getCatId());
+                        if (level3 != null) {
+                            List<Catelog2Vo.Catelog3Vo> collect = level3.stream().map(l3 -> {
+                                Catelog2Vo.Catelog3Vo catelog3Vo = new Catelog2Vo.Catelog3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName().toString());
+                                return catelog3Vo;
+                            }).collect(Collectors.toList());
+                            catelog2Vo.setCatalog3List(collect);
+                        }
+
+                        return catelog2Vo;
+                    }).collect(Collectors.toList());
+                }
+                return catelog2Vos;
+            }));
+            String s = JSON.toJSONString(parent_cid);
+            stringRedisTemplate.opsForValue().set("catalogJSON",s,1, TimeUnit.DAYS);
+            return parent_cid;
+        }
     }
 
     private List<CategoryEntity> getParent_cid(List<CategoryEntity> selectList,Long parent_cid) {
