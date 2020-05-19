@@ -46,11 +46,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
-<!--			<exclusions>-->
-<!--				<groupId>io.lettuce</groupId>-->
-<!--				<artifactId>lettuce-core</artifactId>-->
-<!--				<version>5.2.2.RELEASE</version>-->
-<!--			</exclusions>-->
+			<exclusions>
+				<exclusion>
+					<groupId>io.lettuce</groupId>
+					<artifactId>lettuce-core</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>

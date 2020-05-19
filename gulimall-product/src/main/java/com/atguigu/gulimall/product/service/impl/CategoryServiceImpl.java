@@ -6,12 +6,10 @@ import com.atguigu.gulimall.product.vo.Catelog2Vo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -68,7 +66,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     public List<CategoryEntity> getLevel1Categories() {
         long l = System.currentTimeMillis();
         List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
-        System.out.println("消耗时间"+(System.currentTimeMillis() - l));
+//        System.out.println("消耗时间"+(System.currentTimeMillis() - l));
 
         return categoryEntities;
     }
@@ -78,7 +76,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
         if(StringUtils.isEmpty(catalogJSON)){
 
-            Map<String, List<Catelog2Vo>> catalogJSONFromDB = getCatalogJSONFromDB();
+            Map<String, List<Catelog2Vo>> catalogJSONFromDB = getCatalogJSONFromDBWithRedisLock();
 
             return catalogJSONFromDB;
         }
@@ -86,44 +84,79 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return result;
     }
 
-    public Map<String, List<Catelog2Vo>> getCatalogJSONFromDB() {
+    public Map<String, List<Catelog2Vo>> getCatalogJSONFromDBWithLocalLock() {
         synchronized (this) {
 
-            String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
-            if(!StringUtils.isEmpty(catalogJSON)){
-
-                Map<String, List<Catelog2Vo>> result = JSON.parseObject(catalogJSON,new TypeReference<Map<String, List<Catelog2Vo>> >(){});
-                return result;
-            }
-            System.out.println("缓存不命中，查询数据库");
-            List<CategoryEntity> selectList = baseMapper.selectList(null);
-
-            List<CategoryEntity> level1Categories = getParent_cid(selectList, 0L);
-
-            Map<String, List<Catelog2Vo>> parent_cid = level1Categories.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
-                List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
-                List<Catelog2Vo> catelog2Vos = null;
-                if (categoryEntities != null) {
-                    catelog2Vos = categoryEntities.stream().map(l2 -> {
-                        Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName());
-                        List<CategoryEntity> level3 = getParent_cid(selectList, l2.getCatId());
-                        if (level3 != null) {
-                            List<Catelog2Vo.Catelog3Vo> collect = level3.stream().map(l3 -> {
-                                Catelog2Vo.Catelog3Vo catelog3Vo = new Catelog2Vo.Catelog3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName().toString());
-                                return catelog3Vo;
-                            }).collect(Collectors.toList());
-                            catelog2Vo.setCatalog3List(collect);
-                        }
-
-                        return catelog2Vo;
-                    }).collect(Collectors.toList());
-                }
-                return catelog2Vos;
-            }));
-            String s = JSON.toJSONString(parent_cid);
-            stringRedisTemplate.opsForValue().set("catalogJSON",s,1, TimeUnit.DAYS);
-            return parent_cid;
+            return getDataFromDb();
         }
+    }
+    public Map<String, List<Catelog2Vo>> getCatalogJSONFromDBWithRedisLock() {
+        String uuid = UUID.randomUUID().toString();
+        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent("lock", uuid,300,TimeUnit.SECONDS);
+        if(lock){
+            System.out.println("获取分布式锁成功");
+            Map<String, List<Catelog2Vo>> dataFromDb;
+            try{
+                 dataFromDb = getDataFromDb();
+            }finally{
+                String script = "if redis.call(\"get\",KEYS[1]) == ARGV[1]\n" +
+                        "then\n" +
+                        "    return redis.call(\"del\",KEYS[1])\n" +
+                        "else\n" +
+                        "    return 0\n" +
+                        "end";
+                stringRedisTemplate.execute(new DefaultRedisScript<Long>(script,Long.class),Arrays.asList("lock"),uuid);
+            }
+            return dataFromDb;
+        }else {
+            System.out.println("获取分布式锁失败，重试");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return getCatalogJSONFromDBWithRedisLock();
+        }
+
+
+    }
+
+    private Map<String, List<Catelog2Vo>> getDataFromDb() {
+        String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
+        if (!StringUtils.isEmpty(catalogJSON)) {
+
+            Map<String, List<Catelog2Vo>> result = JSON.parseObject(catalogJSON, new TypeReference<Map<String, List<Catelog2Vo>>>() {
+            });
+            return result;
+        }
+        System.out.println("缓存不命中，查询数据库");
+        List<CategoryEntity> selectList = baseMapper.selectList(null);
+
+        List<CategoryEntity> level1Categories = getParent_cid(selectList, 0L);
+
+        Map<String, List<Catelog2Vo>> parent_cid = level1Categories.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
+            List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
+            List<Catelog2Vo> catelog2Vos = null;
+            if (categoryEntities != null) {
+                catelog2Vos = categoryEntities.stream().map(l2 -> {
+                    Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName());
+                    List<CategoryEntity> level3 = getParent_cid(selectList, l2.getCatId());
+                    if (level3 != null) {
+                        List<Catelog2Vo.Catelog3Vo> collect = level3.stream().map(l3 -> {
+                            Catelog2Vo.Catelog3Vo catelog3Vo = new Catelog2Vo.Catelog3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName().toString());
+                            return catelog3Vo;
+                        }).collect(Collectors.toList());
+                        catelog2Vo.setCatalog3List(collect);
+                    }
+
+                    return catelog2Vo;
+                }).collect(Collectors.toList());
+            }
+            return catelog2Vos;
+        }));
+        String s = JSON.toJSONString(parent_cid);
+        stringRedisTemplate.opsForValue().set("catalogJSON", s, 1, TimeUnit.DAYS);
+        return parent_cid;
     }
 
     private List<CategoryEntity> getParent_cid(List<CategoryEntity> selectList,Long parent_cid) {
