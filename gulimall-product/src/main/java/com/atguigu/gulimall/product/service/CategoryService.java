@@ -28,5 +28,7 @@ public interface CategoryService extends IService<CategoryEntity> {
 
     Map<String, List<Catelog2Vo>> getCatalogJSON();
 
+    public void updateCascade(CategoryEntity category);
+
 }
 

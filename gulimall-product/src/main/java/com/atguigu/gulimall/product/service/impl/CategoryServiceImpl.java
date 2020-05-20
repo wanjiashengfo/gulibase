@@ -2,9 +2,14 @@ package com.atguigu.gulimall.product.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import com.atguigu.gulimall.product.vo.Catelog2Vo;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -24,12 +29,17 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    RedissonClient redissonClient;
+    @Autowired
+    CategoryBrandRelationService categoryBrandRelationService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<CategoryEntity> page = this.page(
@@ -61,9 +71,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         Collections.reverse(parentPath);
         return  parentPath.toArray(new Long[parentPath.size()]);
     }
-
+    @Cacheable(value = {"category"},key = "'level1Categorys'")
     @Override
     public List<CategoryEntity> getLevel1Categories() {
+        System.out.println("getLevel1Categories...");
         long l = System.currentTimeMillis();
         List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
 //        System.out.println("消耗时间"+(System.currentTimeMillis() - l));
@@ -89,6 +100,20 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
             return getDataFromDb();
         }
+    }
+    public Map<String, List<Catelog2Vo>> getCatalogJSONFromDBWithRedissonLock() {
+        RLock lock = redissonClient.getLock("catalogJson-lock");
+        lock.lock();
+        System.out.println("获取分布式锁成功");
+        Map<String, List<Catelog2Vo>> dataFromDb;
+        try{
+             dataFromDb = getDataFromDb();
+        }finally{
+            lock.unlock();
+        }
+        return dataFromDb;
+
+
     }
     public Map<String, List<Catelog2Vo>> getCatalogJSONFromDBWithRedisLock() {
         String uuid = UUID.randomUUID().toString();
@@ -187,5 +212,15 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         }).collect(Collectors.toList());
         return collect;
     }
-
+    /**
+     * 级联更新所有关联的数据
+     * @param category
+     */
+    @CacheEvict(value = "category",key = "'level1Categorys'")
+    @Transactional
+    @Override
+    public void updateCascade(CategoryEntity category) {
+        this.updateById(category);
+        categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
+    }
 }
