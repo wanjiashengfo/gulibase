@@ -71,7 +71,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         Collections.reverse(parentPath);
         return  parentPath.toArray(new Long[parentPath.size()]);
     }
-    @Cacheable(value = {"category"},key = "'level1Categorys'")
+    @Cacheable(value = {"category"},key = "'level1Categorys'",sync = true)
     @Override
     public List<CategoryEntity> getLevel1Categories() {
         System.out.println("getLevel1Categories...");
