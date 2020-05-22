@@ -13,6 +13,7 @@ public class SearchResult {
     private List<BrandVo> brands;
     private List<AttrVo> attrs;
     private List<CatalogVo> catalogs;
+    private List<Integer> pageNavs;
     @Data
     public static class BrandVo {
         private Long brandId;
