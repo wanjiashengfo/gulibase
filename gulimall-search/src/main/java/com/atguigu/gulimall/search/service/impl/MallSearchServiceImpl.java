@@ -1,10 +1,14 @@
 package com.atguigu.gulimall.search.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.to.es.SkuEsModel;
+import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.search.config.GulimallElasticSearchConfig;
 import com.atguigu.gulimall.search.constant.EsConstant;
+import com.atguigu.gulimall.search.feign.ProductFeignService;
 import com.atguigu.gulimall.search.service.MallSearchService;
+import com.atguigu.gulimall.search.vo.AttrResponseVo;
 import com.atguigu.gulimall.search.vo.SearchParam;
 import com.atguigu.gulimall.search.vo.SearchResult;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +46,8 @@ import java.util.stream.Collectors;
 public class MallSearchServiceImpl implements MallSearchService {
     @Autowired
     private RestHighLevelClient client;
+    @Autowired
+    ProductFeignService productFeignService;
     @Override
     public SearchResult search(SearchParam param) {
         SearchResult result = null;
@@ -138,6 +144,25 @@ public class MallSearchServiceImpl implements MallSearchService {
             pageNavs.add(i);
         }
         result.setPageNavs(pageNavs);
+
+        List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
+            SearchResult.NavVo navVo = new SearchResult.NavVo();
+            String[] s = attr.split("_");
+            navVo.setNavValue(s[1]);
+            R r = productFeignService.attrInfo(Long.parseLong(s[0]));
+            if(r.getCode()==0){
+                AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
+                });
+                navVo.setNavName(data.getAttrName());
+            }else{
+                navVo.setNavName(s[0]);
+            }
+            return navVo;
+        }).collect(Collectors.toList());
+
+
+        result.setNavs(collect);
+
         return result;
     }
 

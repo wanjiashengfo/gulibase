@@ -14,6 +14,15 @@ public class SearchResult {
     private List<AttrVo> attrs;
     private List<CatalogVo> catalogs;
     private List<Integer> pageNavs;
+
+    private List<NavVo> navs;
+    @Data
+    public static class NavVo{
+        private String navName;
+        private String navValue;
+        private String link;
+    }
+
     @Data
     public static class BrandVo {
         private Long brandId;
