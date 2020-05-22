@@ -15,7 +15,7 @@ public class SearchResult {
     private List<CatalogVo> catalogs;
     @Data
     public static class BrandVo {
-        private Long brangId;
+        private Long brandId;
         private String brandName;
         private String brandImg;
     }
