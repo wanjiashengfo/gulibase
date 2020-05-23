@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -144,24 +146,42 @@ public class MallSearchServiceImpl implements MallSearchService {
             pageNavs.add(i);
         }
         result.setPageNavs(pageNavs);
+        if(param.getAttrs()!=null&&param.getAttrs().size()>0){
+            List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
+                SearchResult.NavVo navVo = new SearchResult.NavVo();
+                String[] s = attr.split("_");
+                navVo.setNavValue(s[1]);
+                R r = productFeignService.attrInfo(Long.parseLong(s[0]));
+                if(r.getCode()==0){
+                    AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
+                    });
+                    navVo.setNavName(data.getAttrName());
+                }else{
+                    navVo.setNavName(s[0]);
+                }
+//                String encode=null;
+//                try{
+//                    encode = URLDecoder.encode(attr, "UTF-8");
+//                }catch(Exception e){
+//                    e.printStackTrace();
+//                }
+                String queryString = null;
+                try{
+                    queryString = URLDecoder.decode(param.get_queryString(), "UTF-8");
+                }catch(Exception e){
+                    e.printStackTrace();
+                }finally{
 
-        List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
-            SearchResult.NavVo navVo = new SearchResult.NavVo();
-            String[] s = attr.split("_");
-            navVo.setNavValue(s[1]);
-            R r = productFeignService.attrInfo(Long.parseLong(s[0]));
-            if(r.getCode()==0){
-                AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
-                });
-                navVo.setNavName(data.getAttrName());
-            }else{
-                navVo.setNavName(s[0]);
-            }
-            return navVo;
-        }).collect(Collectors.toList());
+                }
+
+                String replace = queryString.replace("&attrs="+attr, "");
+                navVo.setLink("http://search.gulimall.com/list.html?"+replace);
+                return navVo;
+            }).collect(Collectors.toList());
+            result.setNavs(collect);
+        }
 
 
-        result.setNavs(collect);
 
         return result;
     }

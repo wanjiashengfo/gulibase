@@ -765,6 +765,10 @@
                 <a href="/static/search/#">游戏手机</a>
             </div>
         </div>
+        <div class="JD_ipone_one c">
+<!--            面包屑导航功能-->
+            <a th:href="${nav.link}" th:each="nav:${result.navs}"><span  th:text="${nav.navName}"></span>:<span th:text="${nav.navValue}"></span>×</a>
+        </div>
         <i><img src="/static/search/image/right-@1x.png" alt=""></i>
     </div>
 </div>
@@ -1995,7 +1999,8 @@
         // } else {
         //     location.href = location.href + "?" + name + "=" + value;
         // }
-        location.href = replaceParamVal(location.href,"keyword",value);
+        value = encodeURI(encodeURI(value));
+        location.href = replaceParamVal(location.href,name,value);
     }
 
     function searchByKeyword() {
