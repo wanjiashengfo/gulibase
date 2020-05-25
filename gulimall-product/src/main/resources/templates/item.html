@@ -1267,7 +1267,22 @@
 	<script src="/static/item/js/js.js" type="text/javascript" charset="utf-8"></script>
 	<script type="text/javascript">
 		$(".sku_attr_value").click(function () {
+			var skus = new Array();
+			$(this).addClass("clicked");
+			var curr = $(this).attr("skus").split(",");
+			skus.push(curr);
+			$(this).parent().parent().find(".sku_attr_value").removeClass("checked");
+			$("a[class='sku_attr_value checked']").each(function () {
+				skus.push($(this).attr("skus").split(","));
+			});
+			console.log(skus);
 
+			var filterEle = skus[0];
+			for (var i=1;i<skus.length;i++){
+				filterEle = $(filterEle).filter(skus[i]);
+			}
+			console.log(filterEle[0]);
+			location.href = "http://item.gulimall.com/"+filterEle[0]+".html";
 		});
 		$(function () {
 			$(".sku_attr_value").parent().css({"border":"solid 1px #CCC"});
