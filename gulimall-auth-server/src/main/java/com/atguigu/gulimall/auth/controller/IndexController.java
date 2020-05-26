@@ -1,8 +1,10 @@
 package com.atguigu.gulimall.auth.controller;
 
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.exception.BizCodeEnume;
 import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartFeignService;
 import com.atguigu.gulimall.auth.vo.UserRegistVo;
 import org.apache.commons.lang.StringUtils;
@@ -31,6 +33,8 @@ public class IndexController {
     ThirdPartFeignService thirdPartFeignService;
     @Autowired
     StringRedisTemplate redisTemplate;
+    @Autowired
+    MemberFeignService memberFeignService;
     @ResponseBody
     @GetMapping("/sms/sendCode")
     public R sendCode(@RequestParam("phone") String phone){
@@ -67,6 +71,16 @@ public class IndexController {
                 //删除验证码
                 redisTemplate.delete(AuthServerConstant.SMS_CODE_CACHE_PREFIX + vo.getPhone());
                 //验证码通过
+                R r = memberFeignService.regist(vo);
+                if(r.getCode()==0){
+
+                    return "redirect:http://auth.gulimall.com/login.html";
+                }else {
+                    Map<String, String> errors = new HashMap<>();
+                    errors.put("msg",r.getData(new TypeReference<String>(){}));
+                    redirectAttributes.addFlashAttribute("errors",errors);
+                    return "redirect:http://auth.gulimall.com/reg.html";
+                }
             }else {
                 Map<String, String> errors = new HashMap<>();
                 errors.put("code","验证码错误");
@@ -79,6 +93,6 @@ public class IndexController {
             redirectAttributes.addFlashAttribute("errors",errors);
             return "redirect:http://auth.gulimall.com/reg.html";
         }
-        return "redirect:/login.html";
+//        return "redirect:/login.html";
     }
 }
