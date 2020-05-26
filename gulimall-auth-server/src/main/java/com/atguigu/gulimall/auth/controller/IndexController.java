@@ -59,6 +59,26 @@ public class IndexController {
             redirectAttributes.addFlashAttribute("errors",errors);
             return "redirect:http://auth.gulimall.com/reg.html";
         }
+        //校验验证码
+        String code = vo.getCode();
+        String s = redisTemplate.opsForValue().get(AuthServerConstant.SMS_CODE_CACHE_PREFIX + vo.getPhone());
+        if(!StringUtils.isEmpty(s)){
+            if(code.equals(s.split("_")[0])){
+                //删除验证码
+                redisTemplate.delete(AuthServerConstant.SMS_CODE_CACHE_PREFIX + vo.getPhone());
+                //验证码通过
+            }else {
+                Map<String, String> errors = new HashMap<>();
+                errors.put("code","验证码错误");
+                redirectAttributes.addFlashAttribute("errors",errors);
+                return "redirect:http://auth.gulimall.com/reg.html";
+            }
+        }else {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("code","验证码错误");
+            redirectAttributes.addFlashAttribute("errors",errors);
+            return "redirect:http://auth.gulimall.com/reg.html";
+        }
         return "redirect:/login.html";
     }
 }
