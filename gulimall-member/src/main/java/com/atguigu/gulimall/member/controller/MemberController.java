@@ -64,10 +64,10 @@ public class MemberController {
         }
     }
     @PostMapping("/oauth2/login")
-    public R oauthlogin(@RequestBody SocialUser socialUser){
+    public R oauthlogin(@RequestBody SocialUser socialUser) throws Exception {
         MemberEntity entity = memberService.login(socialUser);
         if(entity!=null){
-            return R.ok();
+            return R.ok().setData(entity);
         }else {
             return R.error(BizCodeEnume.LOGINACCT_PASSWORD_EXCEPTION.getCode(),BizCodeEnume.LOGINACCT_PASSWORD_EXCEPTION.getMsg());
         }
