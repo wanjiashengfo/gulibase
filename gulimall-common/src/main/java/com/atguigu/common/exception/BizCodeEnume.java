@@ -10,6 +10,7 @@ public enum BizCodeEnume {
     VAILD_SMS_CODE_EXCEPTION(10002,"验证码频率太高"),
     PRODUCT_UP_EXCEPTION(11000,"商品上架异常"),
     USER_EXIST_EXCEPTION(15001,"用户存在"),
+    LOGINACCT_PASSWORD_EXCEPTION(15003,"账号密码错误"),
     PHONE_EXIST_EXCEPTION(15002,"手机号存在");
     @Getter
     private int code;
