@@ -1,14 +1,23 @@
 package com.atguigu.gulimall.member.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.atguigu.common.utils.HttpUtils;
 import com.atguigu.gulimall.member.dao.MemberLevelDao;
 import com.atguigu.gulimall.member.entity.MemberLevelEntity;
 import com.atguigu.gulimall.member.exception.PhoneExistException;
 import com.atguigu.gulimall.member.exception.UsernameExistException;
 import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegistVo;
+import com.atguigu.gulimall.member.vo.SocialUser;
+import com.netflix.client.IResponse;
+import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -89,6 +98,44 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
             }else {
                 return null;
             }
+        }
+    }
+
+    @Override
+    public MemberEntity login(SocialUser socialUser) throws Exception {
+        String uid = socialUser.getUid();
+        MemberEntity memberEntity = this.baseMapper.selectOne(new QueryWrapper<MemberEntity>().eq("social_uid", uid));
+        if(memberEntity != null){
+            //这个用户已经注册
+            MemberEntity entity = new MemberEntity();
+            entity.setId(memberEntity.getId());
+            entity.setAccessToken(socialUser.getAccess_token());
+            entity.setExpiresIn(socialUser.getExpires_in());
+            this.baseMapper.updateById(entity);
+            memberEntity.setAccessToken(socialUser.getAccess_token());
+            memberEntity.setExpiresIn(socialUser.getExpires_in());
+            return memberEntity;
+        }else {
+            //没有查到当前社交用户对应的记录我们就注册一个
+            MemberEntity regist = new MemberEntity();
+            //查询到当前社交用户的社交平账号信息
+            HashMap<String, String> query = new HashMap<>();
+            query.put("access_token",socialUser.getAccess_token());
+            query.put("uid",socialUser.getUid());
+            HttpResponse response = HttpUtils.doGet("https://api.weibo.com", "/2/users/show.json", "get", new HashMap<String, String>(), query);
+            if(response.getStatusLine().getStatusCode()==200){
+                String json = EntityUtils.toString(response.getEntity());
+                JSONObject jsonObject = JSON.parseObject(json);
+                String name = jsonObject.getString("name");
+                String gender = jsonObject.getString("gender");
+                regist.setNickname(name);
+                regist.setGender("m".equals(gender)?1:0);
+                regist.setSocialUid(socialUser.getUid());
+                regist.setAccessToken(socialUser.getAccess_token());
+                regist.setExpiresIn(socialUser.getExpires_in());
+                this.baseMapper.insert(regist);
+            }
+            return regist;
         }
     }
 
