@@ -3,7 +3,9 @@ package com.atguigu.gulimall.ssoclient.controller;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +25,11 @@ public class HelloController {
     }
 
     @GetMapping("/employees")
-    public String employees(Model model, HttpSession session){
+    public String employees(Model model, HttpSession session, @RequestParam(value = "token",required = false) String token ){
+        if(!StringUtils.isEmpty(token)){
+            session.setAttribute("loginUser","zhangsan");
+        }
+
         Object loginUser = session.getAttribute("loginUser");
         if(loginUser==null){
             return "redirect:"+ssoServerUrl+"?redirect_url=http://client1.com:8081/employees";
