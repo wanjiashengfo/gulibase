@@ -2,6 +2,7 @@ package com.atguigu.gulimall.auth.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.utils.HttpUtils;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberResponseVo;
@@ -47,7 +48,7 @@ public class OAuth2Controller {
                 //以后浏览器访问哪个网站就会带上这个网站的cookie
                 //子域之间
                 //发卡的时候（指定域名为父域名） 即使是子域发的卡 也能让父域直接使用
-                session.setAttribute("loginUser",data);
+                session.setAttribute(AuthServerConstant.LOGIN_USER,data);
                 System.out.println("登陆成功：" + data);
                 return "redirect:http://gulimall.com";
             }else {
