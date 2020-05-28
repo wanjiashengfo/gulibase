@@ -1,12 +1,14 @@
-package com.atguigu.gulimall.auth.vo;
+package com.atguigu.common.vo;
 
 import lombok.Data;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.util.Date;
+
 @ToString
 @Data
-public class MemberResponseVo {
+public class MemberResponseVo implements Serializable {
     /**
      * id
      */
