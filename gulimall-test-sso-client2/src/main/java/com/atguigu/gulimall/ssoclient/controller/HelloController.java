@@ -26,7 +26,7 @@ public class HelloController {
         return "hello";
     }
 
-    @GetMapping("/employees")
+    @GetMapping("/boss")
     public String employees(Model model, HttpSession session, @RequestParam(value = "token",required = false) String token ){
         if(!StringUtils.isEmpty(token)){
             RestTemplate restTemplate = new RestTemplate();
@@ -37,7 +37,7 @@ public class HelloController {
 
         Object loginUser = session.getAttribute("loginUser");
         if(loginUser==null){
-            return "redirect:"+ssoServerUrl+"?redirect_url=http://client1.com:8081/employees";
+            return "redirect:"+ssoServerUrl+"?redirect_url=http://client2.com:8082/boss";
         }else {
             List<String> emps = new ArrayList<>();
             emps.add("张三");
