@@ -73,6 +73,15 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    @Override
+    public CartItem getCartItem(Long skuId) {
+        BoundHashOperations<String, Object, Object> cartOps = getCartOps();
+        String str = (String) cartOps.get(skuId.toString());
+        CartItem cartItem = JSON.parseObject(str, CartItem.class);
+
+        return cartItem;
+    }
+
     private BoundHashOperations<String, Object, Object> getCartOps() {
         UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
         String cartKey = "";
