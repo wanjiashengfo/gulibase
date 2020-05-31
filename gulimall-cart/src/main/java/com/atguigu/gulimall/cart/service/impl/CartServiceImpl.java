@@ -10,6 +10,7 @@ import com.atguigu.gulimall.cart.vo.CartItem;
 import com.atguigu.gulimall.cart.vo.SkuInfoVo;
 import com.atguigu.gulimall.cart.vo.UserInfoTo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -35,29 +36,41 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartItem addToCart(Long skuId, Integer num) throws ExecutionException, InterruptedException {
         BoundHashOperations<String, Object, Object> cartOps = getCartOps();
-        CartItem cartItem = new CartItem();
-        //远程查询商品信息
-        CompletableFuture<Void> getSkuInfoTask = CompletableFuture.runAsync(() -> {
-            R skuInfo = productFeignService.getSkuInfo(skuId);
-            SkuInfoVo data = skuInfo.getData("skuInfo", new TypeReference<SkuInfoVo>() {
-            });
+        String res = (String) cartOps.get(skuId.toString());
 
-            cartItem.setCheck(true);
-            cartItem.setCount(num);
-            cartItem.setImage(data.getSkuDefaultImg());
-            cartItem.setTitle(data.getSkuTitle());
-            cartItem.setSkuId(data.getSkuId());
-            cartItem.setPrice(data.getPrice());
-        },executor);
-        //远程查询sku组合信息
-        CompletableFuture<Void> getSkuSaleAttrValues = CompletableFuture.runAsync(() -> {
-            List<String> values = productFeignService.getSkuSaleAttrValues(skuId);
-            cartItem.setSkuAttr(values);
-        }, executor);
-        CompletableFuture.allOf(getSkuInfoTask,getSkuSaleAttrValues).get();
-        String s = JSON.toJSONString(cartItem);
-        cartOps.put(skuId.toString(),s);
-        return cartItem;
+        if(StringUtils.isEmpty(res)){
+            //购物车无此商品
+            //远程查询商品信息
+            CartItem cartItem = new CartItem();
+            CompletableFuture<Void> getSkuInfoTask = CompletableFuture.runAsync(() -> {
+                R skuInfo = productFeignService.getSkuInfo(skuId);
+                SkuInfoVo data = skuInfo.getData("skuInfo", new TypeReference<SkuInfoVo>() {
+                });
+
+                cartItem.setCheck(true);
+                cartItem.setCount(num);
+                cartItem.setImage(data.getSkuDefaultImg());
+                cartItem.setTitle(data.getSkuTitle());
+                cartItem.setSkuId(data.getSkuId());
+                cartItem.setPrice(data.getPrice());
+            },executor);
+            //远程查询sku组合信息
+            CompletableFuture<Void> getSkuSaleAttrValues = CompletableFuture.runAsync(() -> {
+                List<String> values = productFeignService.getSkuSaleAttrValues(skuId);
+                cartItem.setSkuAttr(values);
+            }, executor);
+            CompletableFuture.allOf(getSkuInfoTask,getSkuSaleAttrValues).get();
+            String s = JSON.toJSONString(cartItem);
+            cartOps.put(skuId.toString(),s);
+            return cartItem;
+        }else {
+            //购物车有此商品，修改数量即可
+            CartItem cartItem  = JSON.parseObject(res, CartItem.class);
+            cartItem.setCount(cartItem.getCount()+num);
+            String s = JSON.toJSONString(cartItem);
+            cartOps.put(skuId.toString(),s);
+            return cartItem;
+        }
     }
 
     private BoundHashOperations<String, Object, Object> getCartOps() {
