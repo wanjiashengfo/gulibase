@@ -3,6 +3,7 @@ package com.atguigu.gulimall.cart.controller;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.gulimall.cart.interceptor.CartInterceptor;
 import com.atguigu.gulimall.cart.service.CartService;
+import com.atguigu.gulimall.cart.vo.Cart;
 import com.atguigu.gulimall.cart.vo.CartItem;
 import com.atguigu.gulimall.cart.vo.UserInfoTo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,11 @@ public class CartController {
      * @return
      */
    @GetMapping("/cart.html")
-    public String cartListPage(HttpSession session){
-       UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
-       System.out.println(userInfoTo);
+    public String cartListPage(Model model) throws ExecutionException, InterruptedException {
+//       UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
+//       System.out.println(userInfoTo);
+       Cart cart = cartService.getCart();
+       model.addAttribute("cart",cart);
        return "cartList";
    }
    @GetMapping("/addToCart")
@@ -42,10 +45,15 @@ public class CartController {
         return "redirect:http://cart.gulimall.com/addToCartSuccess.html";
    }
     @GetMapping("/addToCartSuccess.html")
-   public String addToCartSuccessPage(@RequestParam("skuId") Long skuId, Model model){
+   public String addToCartSuccessPage(@RequestParam(value = "skuId") Long skuId, Model model){
        //重定向到成功页面，再次查询购物车数据即可
        CartItem item = cartService.getCartItem(skuId);
        model.addAttribute("item",item);
        return "success";
+   }
+    @GetMapping("/checkItem")
+   public String checkItem(@RequestParam("skuId") Long skuId,@RequestParam("check") Integer check){
+       cartService.checkItem(skuId,check);
+       return "redirect:http://cart.gulimall.com/cart.html";
    }
 }

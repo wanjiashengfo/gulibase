@@ -6,6 +6,7 @@ import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.cart.feign.ProductFeignService;
 import com.atguigu.gulimall.cart.interceptor.CartInterceptor;
 import com.atguigu.gulimall.cart.service.CartService;
+import com.atguigu.gulimall.cart.vo.Cart;
 import com.atguigu.gulimall.cart.vo.CartItem;
 import com.atguigu.gulimall.cart.vo.SkuInfoVo;
 import com.atguigu.gulimall.cart.vo.UserInfoTo;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -80,6 +82,64 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = JSON.parseObject(str, CartItem.class);
 
         return cartItem;
+    }
+
+    @Override
+    public Cart getCart() throws ExecutionException, InterruptedException {
+        Cart cart = new Cart();
+        UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
+        if(userInfoTo.getUserId()!=null){
+            String cartKey =CART_PREFIX+ userInfoTo.getUserId();
+            //如果临时购物车中的数据还没有合并
+            List<CartItem> tempcartItems = getCartItems(CART_PREFIX + userInfoTo.getUserKey());
+            if(tempcartItems!=null){
+                //临时购物车里面有数据，需要合并
+                for (CartItem item : tempcartItems) {
+                    addToCart(item.getSkuId(),item.getCount());
+                }
+                //清除临时购物车的数据
+                clearCart(CART_PREFIX + userInfoTo.getUserKey());
+            }
+            List<CartItem> cartItems = getCartItems(cartKey);
+            cart.setItems(cartItems);
+
+        }else {
+            //没登录
+            String cartKey =CART_PREFIX+ userInfoTo.getUserKey();
+            List<CartItem> cartItems = getCartItems(cartKey);
+            cart.setItems(cartItems);
+        }
+        return cart;
+    }
+
+    @Override
+    public void clearCart(String cartKey) {
+        redisTemplate.delete(cartKey);
+    }
+
+    @Override
+    public void checkItem(Long skuId, Integer check) {
+        BoundHashOperations<String, Object, Object> cartOps = getCartOps();
+
+        CartItem cartItem = getCartItem(skuId);
+        cartItem.setCheck(check==1?true:false);
+        String s = JSON.toJSONString(cartItem);
+        cartOps.put(skuId.toString(),s);
+    }
+
+
+    private List<CartItem> getCartItems(String cartKey){
+        BoundHashOperations<String, Object, Object> hashOps = redisTemplate.boundHashOps(cartKey);
+        List<Object> values = hashOps.values();
+        if(values!=null&&values.size()>0){
+            List<CartItem> collect = values.stream().map((obj) -> {
+                String str = (String) obj;
+                CartItem cartItem = JSON.parseObject(str, CartItem.class);
+                return cartItem;
+            }).collect(Collectors.toList());
+            return collect;
+        }
+        return null;
     }
 
     private BoundHashOperations<String, Object, Object> getCartOps() {
