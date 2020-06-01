@@ -44,11 +44,14 @@ class GulimallOrderApplicationTests {
 	}
 	@Test
 	public void sendMessageTest(){
-		OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
-		reasonEntity.setId(1L);
-		reasonEntity.setCreateTime(new Date());
-		reasonEntity.setName("哈哈");
-		rabbitTemplate.convertAndSend("hello-java-exchange","hello.java",reasonEntity);
-		log.info("信息【{}】发送成功",reasonEntity);
+
+		for (int i = 0; i < 10; i++) {
+			OrderReturnReasonEntity reasonEntity = new OrderReturnReasonEntity();
+			reasonEntity.setId(1L);
+			reasonEntity.setCreateTime(new Date());
+			reasonEntity.setName("哈哈"+i);
+			rabbitTemplate.convertAndSend("hello-java-exchange","hello.java",reasonEntity);
+			log.info("信息【{}】发送成功",reasonEntity);
+		}
 	}
 }
