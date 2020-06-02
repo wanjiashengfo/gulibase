@@ -16,4 +16,4 @@ spring:
         sign: 1
         appcode: 94abb3f900be4641b737d4672159fbdb
 server:
-  port: 30000
+  port: 33333
