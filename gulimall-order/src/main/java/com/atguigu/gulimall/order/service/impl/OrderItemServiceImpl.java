@@ -31,10 +31,17 @@ public class OrderItemServiceImpl extends ServiceImpl<OrderItemDao, OrderItemEnt
 
         return new PageUtils(page);
     }
-//    @RabbitListener(queues = {"hello-java-queue"})
+    @RabbitListener(queues = {"hello-java-queue"})
     public void receiveMessage(Message message,
                                OrderReturnReasonEntity content,
                                Channel channel){
         System.out.println("接受到消息" + message);
+        long deliveryTag = message.getMessageProperties().getDeliveryTag();
+        try{
+            channel.basicAck(deliveryTag,false);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
     }
 }
