@@ -15,12 +15,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.jws.WebParam;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Controller
 public class CartController {
     @Autowired
     CartService cartService;
+
+    @GetMapping("/currentUserCartItems")
+    public List<CartItem> getCurrentUserCartItems(){
+        return cartService.getUserCartItems();
+    }
     /**
      * 浏览器有一个cookie：user-key 标识用户身份 一个月之后过期
      * 如果第一次使用购物车 都会给一个临时的用户身份
