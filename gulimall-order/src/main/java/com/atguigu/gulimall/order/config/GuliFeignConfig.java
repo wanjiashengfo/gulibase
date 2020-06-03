@@ -22,10 +22,13 @@ public class GuliFeignConfig {
                 //RequestContextHolder是上下文环境的保持器
                 ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
                 HttpServletRequest request = attributes.getRequest();
-                //同步请求头数据
-                String cookie = request.getHeader("Cookie");
-                template.header("Cookie",cookie);
-                System.out.println("feign远程之前先进行RequestInterceptor.apply");
+                if(request!=null){
+                    //同步请求头数据
+                    String cookie = request.getHeader("Cookie");
+                    template.header("Cookie",cookie);
+                    System.out.println("feign远程之前先进行RequestInterceptor.apply");
+                }
+
             }
         };
     }

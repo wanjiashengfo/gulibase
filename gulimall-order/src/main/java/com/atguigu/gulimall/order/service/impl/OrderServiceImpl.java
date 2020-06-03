@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +25,8 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.service.OrderService;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 
 @Service("orderService")
@@ -29,6 +35,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     MemberFeignService memberFeignService;
     @Autowired
     CartFeignService cartFeignService;
+    @Autowired
+    ThreadPoolExecutor executor;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<OrderEntity> page = this.page(
@@ -40,15 +48,30 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
-    public OrderConfirmVo confirmOrder() {
+    public OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException {
         OrderConfirmVo confirmVo = new OrderConfirmVo();
         MemberResponseVo memberResponseVo = LoginUserInterceptor.loginUser.get();
-        List<MemberAddressVo> address = memberFeignService.getAddress(memberResponseVo.getId());
-        confirmVo.setAddress(address);
-        List<OrderItemVo> items = cartFeignService.getCurrentUserCartItems();
-        confirmVo.setItems(items);
+
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+
+
+        CompletableFuture<Void> getAddressFuture = CompletableFuture.runAsync(() -> {
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            List<MemberAddressVo> address = memberFeignService.getAddress(memberResponseVo.getId());
+            confirmVo.setAddress(address);
+        }, executor);
+
+        CompletableFuture<Void> cartFuture = CompletableFuture.runAsync(() -> {
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            List<OrderItemVo> items = cartFeignService.getCurrentUserCartItems();
+            confirmVo.setItems(items);
+        }, executor);
+
+
         Integer integration = memberResponseVo.getIntegration();
         confirmVo.setIntergration(integration);
+
+        CompletableFuture.allOf(getAddressFuture,cartFuture).get();
         return confirmVo;
     }
 
