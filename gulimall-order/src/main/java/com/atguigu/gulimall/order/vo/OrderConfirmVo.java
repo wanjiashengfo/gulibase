@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 
 public class OrderConfirmVo {
@@ -21,6 +22,8 @@ public class OrderConfirmVo {
     BigDecimal payPrice;
     @Setter @Getter
     String orderToken;
+    @Setter @Getter
+    Map<Long,Boolean> stocks;
 
     public BigDecimal getTotal() {
         BigDecimal sum = new BigDecimal("0");
@@ -36,5 +39,15 @@ public class OrderConfirmVo {
 
     public BigDecimal getPayPrice() {
         return getTotal();
+    }
+
+    public Integer getCount(){
+        Integer i = 0;
+        if(items!=null){
+            for (OrderItemVo item : items) {
+                i += item.getCount();
+            }
+        }
+        return i;
     }
 }

@@ -16,7 +16,7 @@ mybatis-plus:
     db-config:
       id-type: auto
 server:
-  port: 20000
+  port: 20001
 logging:
   level:
     com.atguigu: debug
