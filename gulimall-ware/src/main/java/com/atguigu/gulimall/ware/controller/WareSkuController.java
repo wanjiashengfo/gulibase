@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.atguigu.common.exception.BizCodeEnume;
-import com.atguigu.gulimall.ware.exception.NoStockException;
-import com.atguigu.gulimall.ware.vo.LockStockResult;
+import com.atguigu.common.exception.NoStockException;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
 import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
-import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

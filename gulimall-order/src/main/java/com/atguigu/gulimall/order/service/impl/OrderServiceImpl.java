@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.order.constant.OrderConstant;
@@ -122,6 +123,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         SubmitOrderResponseVo responseVo = new SubmitOrderResponseVo();
         MemberResponseVo memberResponseVo = LoginUserInterceptor.loginUser.get();
+        responseVo.setCode(0);
         confirmVoThreadLocal.set(vo);
 
         //验证令牌(令牌的对比和删除要原子性)
@@ -155,9 +157,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 lockVo.setLocks(locks);
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if(r.getCode() == 0){
-
+                    responseVo.setOrder(order.getOrder());
+                    return responseVo;
                 }else {
 
+                    responseVo.setCode(3);
+
+                    return responseVo;
                 }
             }else {
                 responseVo.setCode(1);
@@ -170,7 +176,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 //        }else {
 //
 //        }
-        return responseVo;
+
     }
 
     private void saveOrder(OrderCreateTo order) {
@@ -191,6 +197,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         List<OrderItemEntity> itemEntities = buildOrderItems(orderSn);
 
         computePrice(orderEntity,itemEntities);
+
+        createTo.setOrder(orderEntity);
+        createTo.setOrderItems(itemEntities);
 
         return createTo;
     }
