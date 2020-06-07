@@ -22,4 +22,6 @@ public interface WareSkuDao extends BaseMapper<WareSkuEntity> {
     List<Long> listWareIdHasSkuStock(@Param("skuId") Long skuId);
 
     Long lockSkuStock(@Param("skuId") Long skuId, @Param("wareId") Long wareId, @Param("num") Integer num);
+
+    void unLockStock(Long skuId, Long wareId, Integer num);
 }

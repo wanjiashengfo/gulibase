@@ -158,6 +158,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if(r.getCode() == 0){
                     responseVo.setOrder(order.getOrder());
+                    int i = 10/0;
                     return responseVo;
                 }else {
 
@@ -176,6 +177,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 //        }else {
 //
 //        }
+
+    }
+
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        OrderEntity order_sn = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
+        return order_sn;
 
     }
 
