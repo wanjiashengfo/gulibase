@@ -12,10 +12,10 @@ import java.util.Map;
 
 @Configuration
 public class MyRabbitConfig {
-    @RabbitListener(queues = "stock.release.stock.queue")
-    public void handle(Message message){
-
-    }
+//    @RabbitListener(queues = "stock.release.stock.queue")
+//    public void handle(Message message){
+//
+//    }
     @Bean
     public MessageConverter messageConverter(){
         return new Jackson2JsonMessageConverter();

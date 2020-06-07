@@ -62,7 +62,13 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     }
 
     private void unLockStock(Long skuId,Long wareId,Integer num,Long taskDetailId){
+        //库存解锁
         wareSkuDao.unLockStock(skuId,wareId,num);
+        //更新库存工作单的状态
+        WareOrderTaskDetailEntity entity = new WareOrderTaskDetailEntity();
+        entity.setId(taskDetailId);
+        entity.setLockStatus(2);
+        orderTaskDetailService.updateById(entity);
     }
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -179,9 +185,13 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                 });
                 if(data == null||data.getStatus() == 4){
                     //订单已经被取消了，才能解锁库存
-                    unLockStock(detail.getSkuId(),detail.getWareId(),detail.getSkuNum(),detailId);
+                    if(byId.getLockStatus()==1){
+                        unLockStock(detail.getSkuId(),detail.getWareId(),detail.getSkuNum(),detailId);
+                    }
+
                 }
             }else {//消息解锁以后重新放入队列，让别人继续消费
+                throw  new RuntimeException("远程服务失败");
             }
             //解锁
         }else {
