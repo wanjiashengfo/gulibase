@@ -28,7 +28,7 @@ public class AlipayTemplate {
 
     // 页面跳转同步通知页面路径 需http://格式的完整路径，不能加?id=123这类自定义参数，必须外网可以正常访问
     //同步通知，支付成功，一般跳转到成功页
-    private  String return_url= "http://eljn7nlm4l.52http.tech/alipay.trade.page.pay-JAVA-UTF-8/return_url.jsp";
+    private  String return_url= "http://member.gulimall.com/memberOrder.html";
 
     // 签名方式
     private  String sign_type = "RSA2";
