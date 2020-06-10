@@ -33,7 +33,7 @@ public class MyRabbitConfig {
         Map<String,Object> arguments = new HashMap<>();
         arguments.put("x-dead-letter-exchange","stock-event-exchange");//stockDelayQueue里面的消息死了以后，交给stock-event-exchange路由
         arguments.put("x-dead-letter-routing-key","stock.release.order");//stockDelayQueue里面的消息死了以后，用的路由键是stock.release.order
-        arguments.put("x-message-ttl",30000);//消息的存活时间
+        arguments.put("x-message-ttl",120000);//消息的存活时间
         return  new Queue("stock.delay.queue",true,false,false,arguments);
     }
     @Bean
