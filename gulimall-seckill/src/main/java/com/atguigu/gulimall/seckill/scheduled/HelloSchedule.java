@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @EnableAsync
 public class HelloSchedule {
     @Async
-    @Scheduled(cron = "*/5 * * ? * 4")
+    @Scheduled(cron = "* * * ? * 1")
     public void hello(){
         log.info("hello....");
     }
