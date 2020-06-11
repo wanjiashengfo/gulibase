@@ -19,9 +19,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +55,44 @@ public class SeckillServiceImpl implements SeckillService {
             //缓存活动的关联信息
             saveSessionSkuInfos(sessionData);
         }
+    }
+    public String transferLongToDate(String dateFormat, Long millSec) {
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+        Date date = new Date(millSec);
+        return sdf.format(date);
+    }
+    @Override
+    public List<SecKillSkuRedisTo> getCurrentSeckillSkus() {
+        //确定当前时间是哪个秒杀场次
+
+
+        long time = new Date().getTime();
+        String s1 = transferLongToDate("yyyy-MM-dd HH:mm:ss", time);
+        Set<String> keys = redisTemplate.keys(SESSIONS_CACHE_PREFIX + "*");
+        for (String key : keys) {
+            //seckill:sessions:1591941600000_1591948800000
+            String replace = key.replace(SESSIONS_CACHE_PREFIX, "");
+            String[] s = replace.split("_");
+            long start = Long.parseLong(s[0]);
+            long end = Long.parseLong(s[1]);
+            if(time>=start && time<=end){
+                List<String> range = redisTemplate.opsForList().range(key, -100, 100);
+                BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+                List<String> list = hashOps.multiGet(range);
+                if(list!=null){
+                    List<SecKillSkuRedisTo> collect = list.stream().map(item -> {
+                        SecKillSkuRedisTo redis = JSON.parseObject(item.toString(), SecKillSkuRedisTo.class);
+                        //当前秒杀已经开始，需要随机码
+//                        redis.setRandomCode(null);
+                        return redis;
+                    }).collect(Collectors.toList());
+                    return collect;
+                }
+                break;
+            }
+        }
+
+        return null;
     }
 
     private void saveSessionInfos(List<SeckillSessionsWithSkus> sessions){
