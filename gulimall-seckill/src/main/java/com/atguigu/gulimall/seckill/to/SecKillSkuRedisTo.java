@@ -4,6 +4,7 @@ import com.atguigu.gulimall.seckill.vo.SkuInfoVo;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 public class SecKillSkuRedisTo {
@@ -20,6 +21,9 @@ public class SecKillSkuRedisTo {
      * 商品id
      */
     private Long skuId;
+
+    //商品秒杀随机码
+    private String randomCode;
     /**
      * 秒杀价格
      */
@@ -38,4 +42,8 @@ public class SecKillSkuRedisTo {
     private Integer seckillSort;
 
     private SkuInfoVo skuInfo;
+
+    private Long startTime;
+
+    private Long endTime;
 }

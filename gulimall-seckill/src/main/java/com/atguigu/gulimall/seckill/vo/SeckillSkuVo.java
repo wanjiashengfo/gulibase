@@ -26,7 +26,7 @@ public class SeckillSkuVo {
     /**
      * 秒杀总量
      */
-    private BigDecimal seckillCount;
+    private int seckillCount;
     /**
      * 每人限购数量
      */
