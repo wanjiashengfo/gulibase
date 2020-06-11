@@ -12,8 +12,9 @@ public class SeckillSkuScheduled {
     //每天晚上三点，上架最近三天需要秒杀的商品
     @Autowired
     SeckillService seckillService;
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 * * * * ?")
     public void uploadSeckillSkuLatest3Days(){
+        log.info("上架秒杀的商品信息。。。");
         seckillService.uploadSeckillSkuLatest3Days();
     }
 }

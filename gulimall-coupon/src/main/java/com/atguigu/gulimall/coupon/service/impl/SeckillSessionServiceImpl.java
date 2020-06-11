@@ -2,6 +2,7 @@ package com.atguigu.gulimall.coupon.service.impl;
 
 import com.atguigu.gulimall.coupon.entity.SeckillSkuRelationEntity;
 import com.atguigu.gulimall.coupon.service.SeckillSkuRelationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -27,7 +28,7 @@ import com.atguigu.gulimall.coupon.service.SeckillSessionService;
 @Service("seckillSessionService")
 public class SeckillSessionServiceImpl extends ServiceImpl<SeckillSessionDao, SeckillSessionEntity> implements SeckillSessionService {
 
-
+    @Autowired
     SeckillSkuRelationService seckillSkuRelationService;
 
     @Override

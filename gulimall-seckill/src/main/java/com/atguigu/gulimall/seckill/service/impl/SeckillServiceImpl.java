@@ -59,7 +59,7 @@ public class SeckillServiceImpl implements SeckillService {
             Long startTime = session.getStartTime().getTime();
             Long endTime = session.getEndTime().getTime();
             String key = SESSIONS_CACHE_PREFIX+startTime+"_"+endTime;
-            List<String> collect = session.getRelationSkus().stream().map(item->item.getId().toString()).collect(Collectors.toList());
+            List<String> collect = session.getRelationSkus().stream().map(item->item.getSkuId().toString()).collect(Collectors.toList());
             //缓存活动信息
             redisTemplate.opsForList().leftPushAll(key,collect);
         });
@@ -91,7 +91,7 @@ public class SeckillServiceImpl implements SeckillService {
                 semaphore.trySetPermits(seckillSkuVo.getSeckillCount());
 
                 String jsonString = JSON.toJSONString(redisTo);
-                ops.put(seckillSkuVo.getId(),jsonString);
+                ops.put(seckillSkuVo.getSkuId().toString(),jsonString);
             });
         });
     }
