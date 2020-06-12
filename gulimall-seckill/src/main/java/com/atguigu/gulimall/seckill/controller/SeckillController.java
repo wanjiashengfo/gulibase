@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,5 +25,12 @@ public class SeckillController {
     public R getSkuSeckillInfo(@PathVariable("skuId") Long skuId){
         SecKillSkuRedisTo to = seckillService.getSkuSeckillInfo(skuId);
         return R.ok().setData(to);
+    }
+
+    @GetMapping("/kill")
+    public  R secKill(@RequestParam("killId") Long killId,
+                      @RequestParam("key") String key,
+                      @RequestParam("num") Integer num){
+        return null;
     }
 }
