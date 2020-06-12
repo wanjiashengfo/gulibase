@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,6 +93,31 @@ public class SeckillServiceImpl implements SeckillService {
             }
         }
 
+        return null;
+    }
+
+    @Override
+    public SecKillSkuRedisTo getSkuSeckillInfo(Long skuId) {
+        BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+        Set<String> keys = hashOps.keys();
+        if(keys!=null&&keys.size()>0){
+            String regx = "\\d_"+skuId;
+            for (String key : keys) {
+                if(Pattern.matches(regx,key)){
+                    String json = hashOps.get(key);
+                    SecKillSkuRedisTo skuRedisTo = JSON.parseObject(json, SecKillSkuRedisTo.class);
+                    long current = new Date().getTime();
+                    Long startTime = skuRedisTo.getStartTime();
+                    Long endTime = skuRedisTo.getEndTime();
+                    if(current>= startTime && current<= endTime){
+
+                    }else {
+                        skuRedisTo.setRandomCode(null);
+                    }
+                    return skuRedisTo;
+                }
+            }
+        }
         return null;
     }
 

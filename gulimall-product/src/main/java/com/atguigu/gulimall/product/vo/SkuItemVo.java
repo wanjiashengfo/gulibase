@@ -16,5 +16,5 @@ public class SkuItemVo {
     List<SkuItemSaleAttrVo> saleAttr;
     List<SpuItemAttrGroupVo> groupAttrs;
     boolean hasStock = true;
-
+    SeckillInfoVo seckillInfoVo;
 }
