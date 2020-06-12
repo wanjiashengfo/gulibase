@@ -31,6 +31,7 @@ public class SeckillController {
     public  R secKill(@RequestParam("killId") Long killId,
                       @RequestParam("key") String key,
                       @RequestParam("num") Integer num){
-        return null;
+        String orderSn = seckillService.kill(killId,key,num);
+        return R.ok().setData(orderSn);
     }
 }
