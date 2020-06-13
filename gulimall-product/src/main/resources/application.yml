@@ -29,6 +29,6 @@ server:
 
 logging:
   level:
-    com.atguigu.gulimall: error
+    com.atguigu.gulimall: info
 
 
