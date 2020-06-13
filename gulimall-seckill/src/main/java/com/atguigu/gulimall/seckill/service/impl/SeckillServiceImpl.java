@@ -1,5 +1,9 @@
 package com.atguigu.gulimall.seckill.service.impl;
 
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.to.mq.SeckillOrderTo;
@@ -14,6 +18,7 @@ import com.atguigu.gulimall.seckill.vo.SeckillSessionsWithSkus;
 import com.atguigu.gulimall.seckill.vo.SeckillSkuVo;
 import com.atguigu.gulimall.seckill.vo.SkuInfoVo;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -33,7 +38,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class SeckillServiceImpl implements SeckillService {
     @Autowired
@@ -71,62 +76,76 @@ public class SeckillServiceImpl implements SeckillService {
         Date date = new Date(millSec);
         return sdf.format(date);
     }
+    public  List<SecKillSkuRedisTo> blockHandler(BlockException e){
+        log.info("getCurrentSeckillSkusResource资源被限流，{}",e.getMessage());
+        return null;
+    }
+
+    @SentinelResource(value = "getCurrentSeckillSkusResource",blockHandler = "blockHandler")
     @Override
     public List<SecKillSkuRedisTo> getCurrentSeckillSkus() {
         //确定当前时间是哪个秒杀场次
 
 
         long time = new Date().getTime();
-        String s1 = transferLongToDate("yyyy-MM-dd HH:mm:ss", time);
-        Set<String> keys = redisTemplate.keys(SESSIONS_CACHE_PREFIX + "*");
-        for (String key : keys) {
-            //seckill:sessions:1591941600000_1591948800000
-            String replace = key.replace(SESSIONS_CACHE_PREFIX, "");
-            String[] s = replace.split("_");
-            long start = Long.parseLong(s[0]);
-            long end = Long.parseLong(s[1]);
-            if(time>=start && time<=end){
-                List<String> range = redisTemplate.opsForList().range(key, -100, 100);
-                BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
-                List<String> list = hashOps.multiGet(range);
-                if(list!=null){
-                    List<SecKillSkuRedisTo> collect = list.stream().map(item -> {
-                        SecKillSkuRedisTo redis = JSON.parseObject(item.toString(), SecKillSkuRedisTo.class);
-                        //当前秒杀已经开始，需要随机码
-//                        redis.setRandomCode(null);
-                        return redis;
-                    }).collect(Collectors.toList());
-                    return collect;
+        try(Entry entry = SphU.entry("seckillSkus")){
+            String s1 = transferLongToDate("yyyy-MM-dd HH:mm:ss", time);
+            Set<String> keys = redisTemplate.keys(SESSIONS_CACHE_PREFIX + "*");
+            for (String key : keys) {
+                //seckill:sessions:1591941600000_1591948800000
+                String replace = key.replace(SESSIONS_CACHE_PREFIX, "");
+                String[] s = replace.split("_");
+                long start = Long.parseLong(s[0]);
+                long end = Long.parseLong(s[1]);
+                if(time>=start && time<=end){
+                    List<String> range = redisTemplate.opsForList().range(key, -100, 100);
+                    BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+                    List<String> list = hashOps.multiGet(range);
+                    if(list!=null){
+                        List<SecKillSkuRedisTo> collect = list.stream().map(item -> {
+                            SecKillSkuRedisTo redis = JSON.parseObject(item.toString(), SecKillSkuRedisTo.class);
+                            //当前秒杀已经开始，需要随机码
+    //                        redis.setRandomCode(null);
+                            return redis;
+                        }).collect(Collectors.toList());
+                        return collect;
+                    }
+                    break;
                 }
-                break;
             }
-        }
+        }catch(BlockException e){
+            log.info("资源被限流，{}",e.getMessage());
+        }finally{
 
+        }
         return null;
     }
 
     @Override
     public SecKillSkuRedisTo getSkuSeckillInfo(Long skuId) {
         BoundHashOperations<String, String, String> hashOps = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
-        Set<String> keys = hashOps.keys();
-        if(keys!=null&&keys.size()>0){
-            String regx = "\\d_"+skuId;
-            for (String key : keys) {
-                if(Pattern.matches(regx,key)){
-                    String json = hashOps.get(key);
-                    SecKillSkuRedisTo skuRedisTo = JSON.parseObject(json, SecKillSkuRedisTo.class);
-                    long current = new Date().getTime();
-                    Long startTime = skuRedisTo.getStartTime();
-                    Long endTime = skuRedisTo.getEndTime();
-                    if(current>= startTime && current<= endTime){
 
-                    }else {
-                        skuRedisTo.setRandomCode(null);
+            Set<String> keys = hashOps.keys();
+            if(keys!=null&&keys.size()>0){
+                String regx = "\\d_"+skuId;
+                for (String key : keys) {
+                    if(Pattern.matches(regx,key)){
+                        String json = hashOps.get(key);
+                        SecKillSkuRedisTo skuRedisTo = JSON.parseObject(json, SecKillSkuRedisTo.class);
+                        long current = new Date().getTime();
+                        Long startTime = skuRedisTo.getStartTime();
+                        Long endTime = skuRedisTo.getEndTime();
+                        if(current>= startTime && current<= endTime){
+
+                        }else {
+                            skuRedisTo.setRandomCode(null);
+                        }
+                        return skuRedisTo;
                     }
-                    return skuRedisTo;
                 }
             }
-        }
+
+
         return null;
     }
 
