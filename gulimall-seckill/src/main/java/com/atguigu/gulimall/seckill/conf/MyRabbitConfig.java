@@ -13,8 +13,7 @@ import javax.annotation.PostConstruct;
 
 @Configuration
 public class MyRabbitConfig {
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+
     @Bean
     public MessageConverter messageConverter(){
         return new Jackson2JsonMessageConverter();
