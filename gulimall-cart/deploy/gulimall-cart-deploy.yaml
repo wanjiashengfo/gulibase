@@ -41,22 +41,22 @@ spec:
   revisionHistoryLimit: 10
   progressDeadlineSeconds: 600
 
-  ---
-  kind: Service
-  apiVersion: v1
-  metadata:
-    name: gulimall-cart
-    namespace: gulimall
-    labels:
-      app: gulimall-cart
-  spec:
-    ports:
-      - name: http
-        protocol: TCP
-        port: 8080
-        targetPort: 8080
-        nodePort: 20002
-    selector:
-      app: gulimall-cart
-    type: NodePort
-    sessionAffinity: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gulimall-cart
+  namespace: gulimall
+  labels:
+    app: gulimall-cart
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 20002
+  selector:
+    app: gulimall-cart
+  type: NodePort
+  sessionAffinity: None

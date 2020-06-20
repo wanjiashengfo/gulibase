@@ -41,22 +41,22 @@ spec:
   revisionHistoryLimit: 10
   progressDeadlineSeconds: 600
 
-  ---
-  kind: Service
-  apiVersion: v1
-  metadata:
-    name: renren-fast
-    namespace: gulimall
-    labels:
-      app: renren-fast
-  spec:
-    ports:
-      - name: http
-        protocol: TCP
-        port: 8080
-        targetPort: 8080
-        nodePort: 20012
-    selector:
-      app: renren-fast
-    type: NodePort
-    sessionAffinity: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: renren-fast
+  namespace: gulimall
+  labels:
+    app: renren-fast
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 20012
+  selector:
+    app: renren-fast
+  type: NodePort
+  sessionAffinity: None
