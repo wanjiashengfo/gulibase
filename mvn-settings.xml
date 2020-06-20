@@ -1,10 +1,18 @@
 <settings>
+<!--    <mirrors>-->
+<!--        <mirror>-->
+<!--            <id>alimaven</id>-->
+<!--            <name>aliyun maven</name>-->
+<!--            <url>http://maven.aliyun.com/nexus/content/repositories/central/</url>-->
+<!--            <mirrorOf>central</mirrorOf>-->
+<!--        </mirror>-->
+<!--    </mirrors>    -->
     <mirrors>
         <mirror>
-            <id>alimaven</id>
-            <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/repositories/central/</url>
+            <id>nexus-aliyun</id>
             <mirrorOf>central</mirrorOf>
+            <name>Nexus aliyun</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
         </mirror>
     </mirrors>
     <profiles>
