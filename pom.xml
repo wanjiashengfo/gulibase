@@ -10,8 +10,11 @@
 	<description>聚合服务</description>
 	<packaging>pom</packaging>
 
-	<sonar.jacoco.reportPaths>${PWD}/./target/jacoco.exec</sonar.jacoco.reportPaths>
-	<sonar.groovy.binaries>target/classes</sonar.groovy.binaries>
+	<properties>
+		<sonar.jacoco.reportPaths>${PWD}/./target/jacoco.exec</sonar.jacoco.reportPaths>
+		<sonar.groovy.binaries>target/classes</sonar.groovy.binaries>
+	</properties>
+
 
 	<modules>
 		<module>gulimall-coupon</module>
