@@ -57,6 +57,6 @@ spec:
       targetPort: 8080
       nodePort: 31004
   selector:
-    app: gulimall-auth-server
+    app: gulimall-gateway
   type: NodePort
   sessionAffinity: None
