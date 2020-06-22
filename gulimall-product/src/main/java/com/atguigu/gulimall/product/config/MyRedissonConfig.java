@@ -13,7 +13,8 @@ public class MyRedissonConfig {
     @Bean(destroyMethod="shutdown")
     public RedissonClient redisson() throws IOException {
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://192.168.56.10:6379");
+//        config.useSingleServer().setAddress("redis://192.168.56.10:6379");
+        config.useSingleServer().setAddress("redis://redis.gulimall:6379");
         return Redisson.create(config);
     }
 }
