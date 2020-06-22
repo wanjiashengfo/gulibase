@@ -64,26 +64,7 @@ pipeline {
         kubernetesDeploy(configs: "$PROJECT_NAME/deploy/**", enableConfigSubstitution: true, kubeconfigId: "$KUBECONFIG_CREDENTIAL_ID")
       }
     }
-    stage('发布版本'){
-      when{
-        expression{
-          return params.PROJECT_VERSION =~ /v.*/
-        }
-      }
-      steps {
-          container ('maven') {
-            input(id: 'release-image-with-tag', message: '发布当前版本镜像吗?')
-              withCredentials([usernamePassword(credentialsId: "$GITHUB_CREDENTIAL_ID", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                sh 'git config --global user.email "493000667@qq.com" '
-                sh 'git config --global user.name "wanjiashengfo" '
-                sh 'git tag -a $PROJECT_VERSION -m "$PROJECT_VERSION" '
-                sh 'git push http://$GIT_USERNAME:$GIT_PASSWORD@github.com/$GITHUB_ACCOUNT/gulimall.git --tags --ipv4'
-              }
-            sh 'docker tag  $REGISTRY/$DOCKERHUB_NAMESPACE/$PROJECT_NAME:SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER $REGISTRY/$DOCKERHUB_NAMESPACE/$PROJECT_NAME:$PROJECT_VERSION '
-            sh 'docker push  $REGISTRY/$DOCKERHUB_NAMESPACE/$PROJECT_NAME:$PROJECT_VERSION '
-        }
-      }
-    }
+
   }
   parameters {
     string(name: 'PROJECT_VERSION', defaultValue: 'v0.0Beta', description: '项目版本')
