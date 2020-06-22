@@ -55,7 +55,7 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 20006
+      nodePort: 31006
   selector:
     app: gulimall-order
   type: NodePort
