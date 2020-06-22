@@ -45,10 +45,10 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: gulimall-auth-server
+  name: gulimall-gateway
   namespace: gulimall
   labels:
-    app: gulimall-auth-server
+    app: gulimall-gateway
 spec:
   ports:
     - name: http
