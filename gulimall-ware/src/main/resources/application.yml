@@ -17,7 +17,7 @@ mybatis-plus:
       id-type: auto
 server:
   port: 20001
-logging:
-  level:
-    com.atguigu: info
+#logging:
+#  level:
+#    com.atguigu: info
 
