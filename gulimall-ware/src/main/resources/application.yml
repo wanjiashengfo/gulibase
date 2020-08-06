@@ -19,5 +19,5 @@ server:
   port: 20001
 #logging:
 #  level:
-#    com.atguigu: debug
+#    com.atguigu: info
 
